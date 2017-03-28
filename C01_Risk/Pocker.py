@@ -71,21 +71,63 @@ class PokerGroup(object):
         if len(poker_group) < 5:
             raise TypeError('poker_group must be a list,length gt 5.')
         self.group_kind = None
+        self.group_order = None
         self.characteristic = {}
         # classify
         if self.is_flush(poker_group):
             if self.is_straight(poker_group):
                 if poker_group[0].poker_kind == Poker.PokerKind.SPADES:
                     self.group_kind = PokerGroup.GroupKind.ROYAL_FLUSH
+                    # only one, dose not classify group_order
                 else:
                     self.group_kind = PokerGroup.GroupKind.STRAIGHT_FLUSH
+                    # group_order classify by kind
+                    # [0, 3]
+                    # Diamond is 0 and spades is 3
+                    poker_kind = poker_group[0].poker_kind
+                    if poker_kind == Poker.PokerKind.DIAMONDS:
+                        self.group_order = 0
+                    elif poker_kind == Poker.PokerKind.CLUBS:
+                        self.group_order = 1
+                    elif poker_kind == Poker.PokerKind.HEARTS:
+                        self.group_order = 2
+                    else:
+                        self.group_order = 3
             else:
                 self.group_kind = PokerGroup.GroupKind.Flush
+                # group_order classify by kind
+                # [0, 3]
+                # Diamond is 0 and spades is 3
+                poker_kind = poker_group[0].poker_kind
+                if poker_kind == Poker.PokerKind.DIAMONDS:
+                    self.group_order = 0
+                elif poker_kind == Poker.PokerKind.CLUBS:
+                    self.group_order = 1
+                elif poker_kind == Poker.PokerKind.HEARTS:
+                    self.group_order = 2
+                else:
+                    self.group_order = 3
         else:
             if self.is_straight(poker_group):
                 self.group_kind = PokerGroup.GroupKind.STRAIGHT
             elif self.is_four_of_a_kind(poker_group):
                 self.group_kind = PokerGroup.GroupKind.FOUR_OF_A_KIND
+                # classify the same points
+                # [0, 5]
+                # 9 is 0 and A is 5
+                max_point = self.max_of_same(poker_group)
+                if max_point == Poker.PokerPoint.IX:
+                    self.group_order = 0
+                elif max_point == Poker.PokerPoint.X:
+                    self.group_order = 1
+                elif max_point == Poker.PokerPoint.XI:
+                    self.group_order = 2
+                elif max_point == Poker.PokerPoint.XII:
+                    self.group_order = 3
+                elif max_point == Poker.PokerPoint.XIII:
+                    self.group_order = 4
+                else:
+                    self.group_order = 5
             else:
                 if self.is_three_of_a_kind(poker_group):
                     # check if is full house
@@ -96,8 +138,41 @@ class PokerGroup(object):
                     pg_point_filter = list(set(pg_point))
                     if len(pg_point_filter) == 2:
                         self.group_kind = PokerGroup.GroupKind.FULL_HOUSE
+                        # classify the same points
+                        # [0, 5]
+                        # 9 is 0 and A is 5
+                        max_point = self.max_of_same(poker_group)
+                        if max_point == Poker.PokerPoint.IX:
+                            self.group_order = 0
+                        elif max_point == Poker.PokerPoint.X:
+                            self.group_order = 1
+                        elif max_point == Poker.PokerPoint.XI:
+                            self.group_order = 2
+                        elif max_point == Poker.PokerPoint.XII:
+                            self.group_order = 3
+                        elif max_point == Poker.PokerPoint.XIII:
+                            self.group_order = 4
+                        else:
+                            self.group_order = 5
                     else:
                         self.group_kind = PokerGroup.GroupKind.THREE_OF_A_KIND
+                        # classify the same points
+                        # [0, 5]
+                        # 9 is 0 and A is 5
+                        max_point = self.max_of_same(poker_group)
+                        if max_point == Poker.PokerPoint.IX:
+                            self.group_order = 0
+                        elif max_point == Poker.PokerPoint.X:
+                            self.group_order = 1
+                        elif max_point == Poker.PokerPoint.XI:
+                            self.group_order = 2
+                        elif max_point == Poker.PokerPoint.XII:
+                            self.group_order = 3
+                        elif max_point == Poker.PokerPoint.XIII:
+                            self.group_order = 4
+                        else:
+                            self.group_order = 5
+
                 else:
                     if self.is_two_pairs(poker_group):
                         self.group_kind = PokerGroup.GroupKind.TWO_PAIR
@@ -214,6 +289,30 @@ class PokerGroup(object):
         if len(pg_point_filter) == 4:
             one_pairs = True
         return one_pairs
+
+    @staticmethod
+    def max_of_same(poker_group):
+        # only for four_of_kind, three_of_kind, full_house
+        pg = poker_group[:]
+        pg_point = []
+        for i in range(len(pg)):
+            pg_point.append(pg[i].poker_point.value)
+        pg_point.sort()
+        pg_point_filter = list(set(pg_point))
+        if pg_point.count(pg_point_filter[0]) > pg_point.count(pg_point_filter[1]):
+            return pg_point_filter[0]
+        else:
+            return pg_point_filter[1]
+
+    @staticmethod
+    def point_max(poker_group):
+        pg = poker_group[:]
+        pg_point = []
+        for i in range(len(pg)):
+            pg_point.append(pg[i].poker_point.value)
+        pg_point.sort()
+        return pg_point[-1]
+
 
 
 if __name__ == '__main__':
